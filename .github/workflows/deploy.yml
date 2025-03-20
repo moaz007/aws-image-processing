@@ -1,0 +1,104 @@
+# Deploy to AWS using GitHub Actions and Serverless Framework
+name: Deploy to AWS
+
+on:
+  push:
+    branches:
+      - main  # Trigger deployment on pushes to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout the repository code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # 2. Set up Node.js environment (version 20)
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      # 3. Configure AWS credentials from repository secrets
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      # 4. Record deployment start time
+      - name: Log Deploy Start Time
+        id: deploy_start
+        run: echo "::set-output name=start::$(date +%s)"
+
+      # 5. Deploy using the Serverless Framework
+      - name: Deploy to AWS
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+        run: npx serverless deploy
+
+      # 6. Record deployment end time
+      - name: Log Deploy End Time
+        id: deploy_end
+        run: echo "::set-output name=end::$(date +%s)"
+
+      # 7. Calculate the deployment duration and export it as an environment variable
+      - name: Calculate Deploy Duration
+        id: calc_duration
+        run: |
+          DEPLOY_DURATION=$(( ${{ steps.deploy_end.outputs.end }} - ${{ steps.deploy_start.outputs.start }} ))
+          echo "Deploy Duration: ${DEPLOY_DURATION} seconds"
+          echo "DEPLOY_DURATION=${DEPLOY_DURATION}" >> $GITHUB_ENV
+
+      # 8. Publish the deployment duration metric to CloudWatch
+      - name: Publish Deploy Duration
+        if: always()
+        run: |
+          aws cloudwatch put-metric-data \
+            --metric-name DeployDuration \
+            --namespace "Github Actions Deployment" \
+            --unit "Seconds" \
+            --value "${DEPLOY_DURATION}"
+
+      # 9. Log the deployment duration to CloudWatch Logs for further review
+      - name: Log Deploy Duration to CloudWatch Logs
+        if: always()
+        run: |
+          LOG_GROUP_NAME="DeployDurations"
+          LOG_STREAM_NAME="workflowRuns"
+          REGION="us-east-1"
+
+          # Create log group and stream if they don't exist
+          aws logs create-log-group --log-group-name "$LOG_GROUP_NAME" --region "$REGION" 2>/dev/null || true
+          aws logs create-log-stream --log-group-name "$LOG_GROUP_NAME" --log-stream-name "$LOG_STREAM_NAME" --region "$REGION" 2>/dev/null || true
+
+          # Get current sequence token for the log stream (if available)
+          SEQUENCE_TOKEN=$(aws logs describe-log-streams \
+            --log-group-name "$LOG_GROUP_NAME" \
+            --log-stream-name "$LOG_STREAM_NAME" \
+            --region "$REGION" \
+            --query 'logStreams[0].uploadSequenceToken' \
+            --output text 2>/dev/null)
+
+          CURRENT_TIME=$(date +%s%3N)
+          MESSAGE="Deployment finished. Duration: ${DEPLOY_DURATION}s"
+
+          # Publish the log event to CloudWatch Logs
+          if [ "$SEQUENCE_TOKEN" = "None" ] || [ -z "$SEQUENCE_TOKEN" ] || [ "$SEQUENCE_TOKEN" = "null" ]; then
+            aws logs put-log-events \
+              --log-group-name "$LOG_GROUP_NAME" \
+              --log-stream-name "$LOG_STREAM_NAME" \
+              --region "$REGION" \
+              --log-events "timestamp=$CURRENT_TIME,message=$MESSAGE"
+          else
+            aws logs put-log-events \
+              --log-group-name "$LOG_GROUP_NAME" \
+              --log-stream-name "$LOG_STREAM_NAME" \
+              --region "$REGION" \
+              --log-events "timestamp=$CURRENT_TIME,message=$MESSAGE" \
+              --sequence-token "$SEQUENCE_TOKEN"
+          fi
+

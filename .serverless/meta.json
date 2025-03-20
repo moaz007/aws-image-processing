@@ -1,0 +1,2189 @@
+{
+  "/home/moaz/aws-image-processing/serverless.yml": {
+    "versionFramework": "4.9.0",
+    "servicePath": "/home/moaz/aws-image-processing/serverless.yml",
+    "serviceConfigFileName": "serverless.yml",
+    "service": {
+      "org": "moaz007",
+      "service": "image-processing-api",
+      "provider": {
+        "name": "aws",
+        "runtime": "nodejs20.x",
+        "memorySize": 2048,
+        "stage": "dev",
+        "logs": {
+          "restApi": true,
+          "httpApi": true
+        },
+        "iamRoleStatements": [
+          {
+            "Effect": "Allow",
+            "Action": [
+              "s3:GetObject",
+              "s3:PutObject",
+              "cloudwatch:PutMetricData"
+            ],
+            "Resource": [
+              "arn:aws:s3:::my-new-image-uploads-moaz007/*",
+              "arn:aws:s3:::my-new-image-processed-moaz007/*"
+            ]
+          }
+        ],
+        "region": "us-east-1",
+        "versionFunctions": true,
+        "compiledCloudFormationTemplate": {
+          "AWSTemplateFormatVersion": "2010-09-09",
+          "Description": "The AWS CloudFormation template for this Serverless application",
+          "Resources": {
+            "UploadImageLogGroup": {
+              "Type": "AWS::Logs::LogGroup",
+              "Properties": {
+                "LogGroupName": "/aws/lambda/image-processing-api-dev-uploadImage",
+                "RetentionInDays": 14
+              }
+            },
+            "ProcessImageLogGroup": {
+              "Type": "AWS::Logs::LogGroup",
+              "Properties": {
+                "LogGroupName": "/aws/lambda/image-processing-api-dev-processImage",
+                "RetentionInDays": 14
+              }
+            },
+            "IamRoleLambdaExecution": {
+              "Type": "AWS::IAM::Role",
+              "Properties": {
+                "AssumeRolePolicyDocument": {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Principal": {
+                        "Service": [
+                          "lambda.amazonaws.com"
+                        ]
+                      },
+                      "Action": [
+                        "sts:AssumeRole"
+                      ]
+                    }
+                  ]
+                },
+                "Policies": [
+                  {
+                    "PolicyName": {
+                      "Fn::Join": [
+                        "-",
+                        [
+                          "image-processing-api",
+                          "dev",
+                          "lambda"
+                        ]
+                      ]
+                    },
+                    "PolicyDocument": {
+                      "Version": "2012-10-17",
+                      "Statement": [
+                        {
+                          "Effect": "Allow",
+                          "Action": [
+                            "logs:CreateLogStream",
+                            "logs:CreateLogGroup",
+                            "logs:TagResource"
+                          ],
+                          "Resource": [
+                            {
+                              "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/image-processing-api-dev*:*"
+                            }
+                          ]
+                        },
+                        {
+                          "Effect": "Allow",
+                          "Action": [
+                            "logs:PutLogEvents"
+                          ],
+                          "Resource": [
+                            {
+                              "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/image-processing-api-dev*:*:*"
+                            }
+                          ]
+                        },
+                        {
+                          "Effect": "Allow",
+                          "Action": [
+                            "s3:GetObject",
+                            "s3:PutObject",
+                            "cloudwatch:PutMetricData"
+                          ],
+                          "Resource": [
+                            "arn:aws:s3:::my-new-image-uploads-moaz007/*",
+                            "arn:aws:s3:::my-new-image-processed-moaz007/*"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "Path": "/",
+                "RoleName": {
+                  "Fn::Join": [
+                    "-",
+                    [
+                      "image-processing-api",
+                      "dev",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "lambdaRole"
+                    ]
+                  ]
+                }
+              }
+            },
+            "UploadImageLambdaFunction": {
+              "Type": "AWS::Lambda::Function",
+              "Properties": {
+                "Code": {
+                  "S3Bucket": "serverless-framework-deployments-us-east-1-9e83b20f-aa7d",
+                  "S3Key": "serverless/image-processing-api/dev/1742272851452-2025-03-18T04:40:51.452Z/image-processing-api.zip"
+                },
+                "Handler": "handler.uploadImage",
+                "Runtime": "nodejs20.x",
+                "FunctionName": "image-processing-api-dev-uploadImage",
+                "MemorySize": 2048,
+                "Timeout": 6,
+                "Role": {
+                  "Fn::GetAtt": [
+                    "IamRoleLambdaExecution",
+                    "Arn"
+                  ]
+                }
+              },
+              "DependsOn": [
+                "UploadImageLogGroup"
+              ]
+            },
+            "ProcessImageLambdaFunction": {
+              "Type": "AWS::Lambda::Function",
+              "Properties": {
+                "Code": {
+                  "S3Bucket": "serverless-framework-deployments-us-east-1-9e83b20f-aa7d",
+                  "S3Key": "serverless/image-processing-api/dev/1742272851452-2025-03-18T04:40:51.452Z/image-processing-api.zip"
+                },
+                "Handler": "handler.processImage",
+                "Runtime": "nodejs20.x",
+                "FunctionName": "image-processing-api-dev-processImage",
+                "MemorySize": 2048,
+                "Timeout": 6,
+                "Role": {
+                  "Fn::GetAtt": [
+                    "IamRoleLambdaExecution",
+                    "Arn"
+                  ]
+                }
+              },
+              "DependsOn": [
+                "ProcessImageLogGroup"
+              ]
+            },
+            "UploadImageLambdaVersionh7GYXi5sdUxGSESnVCWYR0BVtnfYPtGR4rMYYosgRQE": {
+              "Type": "AWS::Lambda::Version",
+              "DeletionPolicy": "Retain",
+              "Properties": {
+                "FunctionName": {
+                  "Ref": "UploadImageLambdaFunction"
+                },
+                "CodeSha256": "ERfAM3XyKq3wsAE3fwNdAYhkUffMl5iAeblmoJtGPK4="
+              }
+            },
+            "ProcessImageLambdaVersionJQWVMAnl2HiphLJIFCeaCbhv4C74t5H8a2GIT55oJs": {
+              "Type": "AWS::Lambda::Version",
+              "DeletionPolicy": "Retain",
+              "Properties": {
+                "FunctionName": {
+                  "Ref": "ProcessImageLambdaFunction"
+                },
+                "CodeSha256": "ERfAM3XyKq3wsAE3fwNdAYhkUffMl5iAeblmoJtGPK4="
+              }
+            },
+            "ApiGatewayRestApi": {
+              "Type": "AWS::ApiGateway::RestApi",
+              "Properties": {
+                "Name": "dev-image-processing-api",
+                "EndpointConfiguration": {
+                  "Types": [
+                    "EDGE"
+                  ]
+                },
+                "Policy": ""
+              }
+            },
+            "ApiGatewayResourceUpload": {
+              "Type": "AWS::ApiGateway::Resource",
+              "Properties": {
+                "ParentId": {
+                  "Fn::GetAtt": [
+                    "ApiGatewayRestApi",
+                    "RootResourceId"
+                  ]
+                },
+                "PathPart": "upload",
+                "RestApiId": {
+                  "Ref": "ApiGatewayRestApi"
+                }
+              }
+            },
+            "ApiGatewayResourceProcess": {
+              "Type": "AWS::ApiGateway::Resource",
+              "Properties": {
+                "ParentId": {
+                  "Fn::GetAtt": [
+                    "ApiGatewayRestApi",
+                    "RootResourceId"
+                  ]
+                },
+                "PathPart": "process",
+                "RestApiId": {
+                  "Ref": "ApiGatewayRestApi"
+                }
+              }
+            },
+            "ApiGatewayMethodUploadPost": {
+              "Type": "AWS::ApiGateway::Method",
+              "Properties": {
+                "HttpMethod": "POST",
+                "RequestParameters": {},
+                "ResourceId": {
+                  "Ref": "ApiGatewayResourceUpload"
+                },
+                "RestApiId": {
+                  "Ref": "ApiGatewayRestApi"
+                },
+                "ApiKeyRequired": "<REDACTED>",
+                "AuthorizationType": "NONE",
+                "Integration": {
+                  "IntegrationHttpMethod": "POST",
+                  "Type": "AWS_PROXY",
+                  "Uri": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition"
+                        },
+                        ":apigateway:",
+                        {
+                          "Ref": "AWS::Region"
+                        },
+                        ":lambda:path/2015-03-31/functions/",
+                        {
+                          "Fn::GetAtt": [
+                            "UploadImageLambdaFunction",
+                            "Arn"
+                          ]
+                        },
+                        "/invocations"
+                      ]
+                    ]
+                  }
+                },
+                "MethodResponses": []
+              },
+              "DependsOn": [
+                "UploadImageLambdaPermissionApiGateway"
+              ]
+            },
+            "ApiGatewayMethodProcessPost": {
+              "Type": "AWS::ApiGateway::Method",
+              "Properties": {
+                "HttpMethod": "POST",
+                "RequestParameters": {},
+                "ResourceId": {
+                  "Ref": "ApiGatewayResourceProcess"
+                },
+                "RestApiId": {
+                  "Ref": "ApiGatewayRestApi"
+                },
+                "ApiKeyRequired": "<REDACTED>",
+                "AuthorizationType": "NONE",
+                "Integration": {
+                  "IntegrationHttpMethod": "POST",
+                  "Type": "AWS_PROXY",
+                  "Uri": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition"
+                        },
+                        ":apigateway:",
+                        {
+                          "Ref": "AWS::Region"
+                        },
+                        ":lambda:path/2015-03-31/functions/",
+                        {
+                          "Fn::GetAtt": [
+                            "ProcessImageLambdaFunction",
+                            "Arn"
+                          ]
+                        },
+                        "/invocations"
+                      ]
+                    ]
+                  }
+                },
+                "MethodResponses": []
+              },
+              "DependsOn": [
+                "ProcessImageLambdaPermissionApiGateway"
+              ]
+            },
+            "ApiGatewayDeployment1742272829711": {
+              "Type": "AWS::ApiGateway::Deployment",
+              "Properties": {
+                "RestApiId": {
+                  "Ref": "ApiGatewayRestApi"
+                },
+                "StageName": "dev"
+              },
+              "DependsOn": [
+                "ApiGatewayMethodUploadPost",
+                "ApiGatewayMethodProcessPost"
+              ]
+            },
+            "UploadImageLambdaPermissionApiGateway": {
+              "Type": "AWS::Lambda::Permission",
+              "Properties": {
+                "FunctionName": {
+                  "Fn::GetAtt": [
+                    "UploadImageLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "apigateway.amazonaws.com",
+                "SourceArn": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":execute-api:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":",
+                      {
+                        "Ref": "ApiGatewayRestApi"
+                      },
+                      "/*/*"
+                    ]
+                  ]
+                }
+              }
+            },
+            "ProcessImageLambdaPermissionApiGateway": {
+              "Type": "AWS::Lambda::Permission",
+              "Properties": {
+                "FunctionName": {
+                  "Fn::GetAtt": [
+                    "ProcessImageLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "apigateway.amazonaws.com",
+                "SourceArn": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":execute-api:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":",
+                      {
+                        "Ref": "ApiGatewayRestApi"
+                      },
+                      "/*/*"
+                    ]
+                  ]
+                }
+              }
+            },
+            "ApiGatewayLogGroup": {
+              "Type": "AWS::Logs::LogGroup",
+              "Properties": {
+                "LogGroupName": "/aws/api-gateway/image-processing-api-dev"
+              }
+            },
+            "CustomApiGatewayAccountCloudWatchRole": {
+              "Type": "Custom::ApiGatewayAccountRole",
+              "Version": "1.0",
+              "Properties": {
+                "ServiceToken": "<REDACTED>"
+              }
+            },
+            "IamRoleCustomResourcesLambdaExecution": {
+              "Type": "AWS::IAM::Role",
+              "Properties": {
+                "AssumeRolePolicyDocument": {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Principal": {
+                        "Service": [
+                          "lambda.amazonaws.com"
+                        ]
+                      },
+                      "Action": [
+                        "sts:AssumeRole"
+                      ]
+                    }
+                  ]
+                },
+                "Policies": [
+                  {
+                    "PolicyName": {
+                      "Fn::Join": [
+                        "-",
+                        [
+                          "dev",
+                          "image-processing-api",
+                          "custom-resources-lambda"
+                        ]
+                      ]
+                    },
+                    "PolicyDocument": {
+                      "Version": "2012-10-17",
+                      "Statement": [
+                        {
+                          "Effect": "Allow",
+                          "Action": [
+                            "logs:CreateLogStream",
+                            "logs:CreateLogGroup",
+                            "logs:TagResource"
+                          ],
+                          "Resource": [
+                            {
+                              "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/image-processing-api-dev*:*"
+                            }
+                          ]
+                        },
+                        {
+                          "Effect": "Allow",
+                          "Action": [
+                            "logs:PutLogEvents"
+                          ],
+                          "Resource": [
+                            {
+                              "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/image-processing-api-dev*:*:*"
+                            }
+                          ]
+                        },
+                        {
+                          "Effect": "Allow",
+                          "Resource": {
+                            "Fn::Join": [
+                              ":",
+                              [
+                                "arn",
+                                {
+                                  "Ref": "AWS::Partition"
+                                },
+                                "iam:",
+                                {
+                                  "Ref": "AWS::AccountId"
+                                },
+                                "role/*"
+                              ]
+                            ]
+                          },
+                          "Action": [
+                            "iam:AttachRolePolicy",
+                            "iam:CreateRole",
+                            "iam:ListAttachedRolePolicies",
+                            "iam:PassRole"
+                          ]
+                        },
+                        {
+                          "Effect": "Allow",
+                          "Resource": {
+                            "Fn::Join": [
+                              ":",
+                              [
+                                "arn",
+                                {
+                                  "Ref": "AWS::Partition"
+                                },
+                                "apigateway:*::/account"
+                              ]
+                            ]
+                          },
+                          "Action": [
+                            "apigateway:GET",
+                            "apigateway:PATCH"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            "CustomDashresourceDashapigwDashcwDashroleLambdaFunction": {
+              "Type": "AWS::Lambda::Function",
+              "Properties": {
+                "Code": {
+                  "S3Bucket": "serverless-framework-deployments-us-east-1-9e83b20f-aa7d",
+                  "S3Key": "serverless/image-processing-api/dev/1742272851452-2025-03-18T04:40:51.452Z/custom-resources.zip"
+                },
+                "FunctionName": "image-processing-api-dev-custom-resource-apigw-cw-role",
+                "Handler": "api-gateway-cloud-watch-role/handler.handler",
+                "MemorySize": 1024,
+                "Runtime": "nodejs20.x",
+                "Timeout": 180,
+                "Role": {
+                  "Fn::GetAtt": [
+                    "IamRoleCustomResourcesLambdaExecution",
+                    "Arn"
+                  ]
+                }
+              },
+              "DependsOn": [
+                "IamRoleCustomResourcesLambdaExecution",
+                "CustomDashresourceDashapigwDashcwDashroleLogGroup"
+              ]
+            },
+            "CustomDashresourceDashapigwDashcwDashroleLogGroup": {
+              "Type": "AWS::Logs::LogGroup",
+              "Properties": {
+                "LogGroupName": "/aws/lambda/image-processing-api-dev-custom-resource-apigw-cw-role"
+              }
+            },
+            "UploadsBucket": {
+              "Type": "AWS::S3::Bucket",
+              "Properties": {
+                "BucketName": "my-new-image-uploads-moaz007",
+                "AccessControl": "Private"
+              }
+            },
+            "ProcessedBucket": {
+              "Type": "AWS::S3::Bucket",
+              "Properties": {
+                "BucketName": "my-new-image-processed-moaz007",
+                "AccessControl": "Private"
+              }
+            },
+            "LambdaExecutionTimeAlarm": {
+              "Type": "AWS::CloudWatch::Alarm",
+              "Properties": {
+                "AlarmName": "LambdaExecutionTimeAlarm",
+                "MetricName": "Duration",
+                "Namespace": "AWS/Lambda",
+                "Statistic": "Average",
+                "Period": 300,
+                "EvaluationPeriods": 1,
+                "Threshold": 3000,
+                "ComparisonOperator": "GreaterThanThreshold",
+                "AlarmActions": [],
+                "Dimensions": [
+                  {
+                    "Name": "FunctionName",
+                    "Value": "image-processing-api-dev-uploadImage"
+                  }
+                ]
+              }
+            },
+            "LambdaErrorRateAlarm": {
+              "Type": "AWS::CloudWatch::Alarm",
+              "Properties": {
+                "AlarmName": "LambdaErrorRateAlarm",
+                "MetricName": "Errors",
+                "Namespace": "AWS/Lambda",
+                "Statistic": "Sum",
+                "Period": 300,
+                "EvaluationPeriods": 1,
+                "Threshold": 1,
+                "ComparisonOperator": "GreaterThanThreshold",
+                "AlarmActions": [],
+                "Dimensions": [
+                  {
+                    "Name": "FunctionName",
+                    "Value": "image-processing-api-dev-uploadImage"
+                  }
+                ]
+              }
+            }
+          },
+          "Outputs": {
+            "ServerlessDeploymentBucketName": {
+              "Value": "serverless-framework-deployments-us-east-1-9e83b20f-aa7d",
+              "Export": {
+                "Name": "sls-image-processing-api-dev-ServerlessDeploymentBucketName"
+              }
+            },
+            "UploadImageLambdaFunctionQualifiedArn": {
+              "Description": "Current Lambda function version",
+              "Value": {
+                "Ref": "UploadImageLambdaVersionh7GYXi5sdUxGSESnVCWYR0BVtnfYPtGR4rMYYosgRQE"
+              },
+              "Export": {
+                "Name": "sls-image-processing-api-dev-UploadImageLambdaFunctionQualifiedArn"
+              }
+            },
+            "ProcessImageLambdaFunctionQualifiedArn": {
+              "Description": "Current Lambda function version",
+              "Value": {
+                "Ref": "ProcessImageLambdaVersionJQWVMAnl2HiphLJIFCeaCbhv4C74t5H8a2GIT55oJs"
+              },
+              "Export": {
+                "Name": "sls-image-processing-api-dev-ProcessImageLambdaFunctionQualifiedArn"
+              }
+            },
+            "ServiceEndpoint": {
+              "Description": "URL of the service endpoint",
+              "Value": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "https://",
+                    {
+                      "Ref": "ApiGatewayRestApi"
+                    },
+                    ".execute-api.",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ".",
+                    {
+                      "Ref": "AWS::URLSuffix"
+                    },
+                    "/dev"
+                  ]
+                ]
+              },
+              "Export": {
+                "Name": "sls-image-processing-api-dev-ServiceEndpoint"
+              }
+            }
+          }
+        },
+        "vpc": {}
+      },
+      "functions": {
+        "uploadImage": {
+          "handler": "handler.uploadImage",
+          "events": [
+            {
+              "http": {
+                "path": "upload",
+                "method": "post",
+                "integration": "AWS_PROXY"
+              }
+            }
+          ],
+          "name": "image-processing-api-dev-uploadImage",
+          "package": {},
+          "memory": 2048,
+          "timeout": 6,
+          "runtime": "nodejs20.x",
+          "vpc": {},
+          "versionLogicalId": "UploadImageLambdaVersionh7GYXi5sdUxGSESnVCWYR0BVtnfYPtGR4rMYYosgRQE"
+        },
+        "processImage": {
+          "handler": "handler.processImage",
+          "events": [
+            {
+              "http": {
+                "path": "process",
+                "method": "post",
+                "integration": "AWS_PROXY"
+              }
+            }
+          ],
+          "name": "image-processing-api-dev-processImage",
+          "package": {},
+          "memory": 2048,
+          "timeout": 6,
+          "runtime": "nodejs20.x",
+          "vpc": {},
+          "versionLogicalId": "ProcessImageLambdaVersionJQWVMAnl2HiphLJIFCeaCbhv4C74t5H8a2GIT55oJs"
+        }
+      },
+      "resources": {
+        "Resources": {
+          "UploadsBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketName": "my-new-image-uploads-moaz007",
+              "AccessControl": "Private"
+            }
+          },
+          "ProcessedBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketName": "my-new-image-processed-moaz007",
+              "AccessControl": "Private"
+            }
+          },
+          "LambdaExecutionTimeAlarm": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+              "AlarmName": "LambdaExecutionTimeAlarm",
+              "MetricName": "Duration",
+              "Namespace": "AWS/Lambda",
+              "Statistic": "Average",
+              "Period": 300,
+              "EvaluationPeriods": 1,
+              "Threshold": 3000,
+              "ComparisonOperator": "GreaterThanThreshold",
+              "AlarmActions": [],
+              "Dimensions": [
+                {
+                  "Name": "FunctionName",
+                  "Value": "image-processing-api-dev-uploadImage"
+                }
+              ]
+            }
+          },
+          "LambdaErrorRateAlarm": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+              "AlarmName": "LambdaErrorRateAlarm",
+              "MetricName": "Errors",
+              "Namespace": "AWS/Lambda",
+              "Statistic": "Sum",
+              "Period": 300,
+              "EvaluationPeriods": 1,
+              "Threshold": 1,
+              "ComparisonOperator": "GreaterThanThreshold",
+              "AlarmActions": [],
+              "Dimensions": [
+                {
+                  "Name": "FunctionName",
+                  "Value": "image-processing-api-dev-uploadImage"
+                }
+              ]
+            }
+          },
+          "UploadImageLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/image-processing-api-dev-uploadImage",
+              "RetentionInDays": 14
+            }
+          },
+          "ProcessImageLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/image-processing-api-dev-processImage",
+              "RetentionInDays": 14
+            }
+          }
+        },
+        "Outputs": {}
+      }
+    },
+    "provider": {
+      "name": "aws",
+      "runtime": "nodejs20.x",
+      "memorySize": 2048,
+      "stage": "dev",
+      "logs": {
+        "restApi": true,
+        "httpApi": true
+      },
+      "iamRoleStatements": [
+        {
+          "Effect": "Allow",
+          "Action": [
+            "s3:GetObject",
+            "s3:PutObject",
+            "cloudwatch:PutMetricData"
+          ],
+          "Resource": [
+            "arn:aws:s3:::my-new-image-uploads-moaz007/*",
+            "arn:aws:s3:::my-new-image-processed-moaz007/*"
+          ]
+        }
+      ],
+      "region": "us-east-1",
+      "versionFunctions": true,
+      "compiledCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "UploadImageLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/image-processing-api-dev-uploadImage",
+              "RetentionInDays": 14
+            }
+          },
+          "ProcessImageLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/image-processing-api-dev-processImage",
+              "RetentionInDays": 14
+            }
+          },
+          "IamRoleLambdaExecution": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": [
+                        "lambda.amazonaws.com"
+                      ]
+                    },
+                    "Action": [
+                      "sts:AssumeRole"
+                    ]
+                  }
+                ]
+              },
+              "Policies": [
+                {
+                  "PolicyName": {
+                    "Fn::Join": [
+                      "-",
+                      [
+                        "image-processing-api",
+                        "dev",
+                        "lambda"
+                      ]
+                    ]
+                  },
+                  "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:CreateLogStream",
+                          "logs:CreateLogGroup",
+                          "logs:TagResource"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/image-processing-api-dev*:*"
+                          }
+                        ]
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:PutLogEvents"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/image-processing-api-dev*:*:*"
+                          }
+                        ]
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "s3:GetObject",
+                          "s3:PutObject",
+                          "cloudwatch:PutMetricData"
+                        ],
+                        "Resource": [
+                          "arn:aws:s3:::my-new-image-uploads-moaz007/*",
+                          "arn:aws:s3:::my-new-image-processed-moaz007/*"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ],
+              "Path": "/",
+              "RoleName": {
+                "Fn::Join": [
+                  "-",
+                  [
+                    "image-processing-api",
+                    "dev",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    "lambdaRole"
+                  ]
+                ]
+              }
+            }
+          },
+          "UploadImageLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": "serverless-framework-deployments-us-east-1-9e83b20f-aa7d",
+                "S3Key": "serverless/image-processing-api/dev/1742272851452-2025-03-18T04:40:51.452Z/image-processing-api.zip"
+              },
+              "Handler": "handler.uploadImage",
+              "Runtime": "nodejs20.x",
+              "FunctionName": "image-processing-api-dev-uploadImage",
+              "MemorySize": 2048,
+              "Timeout": 6,
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "UploadImageLogGroup"
+            ]
+          },
+          "ProcessImageLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": "serverless-framework-deployments-us-east-1-9e83b20f-aa7d",
+                "S3Key": "serverless/image-processing-api/dev/1742272851452-2025-03-18T04:40:51.452Z/image-processing-api.zip"
+              },
+              "Handler": "handler.processImage",
+              "Runtime": "nodejs20.x",
+              "FunctionName": "image-processing-api-dev-processImage",
+              "MemorySize": 2048,
+              "Timeout": 6,
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "ProcessImageLogGroup"
+            ]
+          },
+          "UploadImageLambdaVersionh7GYXi5sdUxGSESnVCWYR0BVtnfYPtGR4rMYYosgRQE": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "UploadImageLambdaFunction"
+              },
+              "CodeSha256": "ERfAM3XyKq3wsAE3fwNdAYhkUffMl5iAeblmoJtGPK4="
+            }
+          },
+          "ProcessImageLambdaVersionJQWVMAnl2HiphLJIFCeaCbhv4C74t5H8a2GIT55oJs": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "ProcessImageLambdaFunction"
+              },
+              "CodeSha256": "ERfAM3XyKq3wsAE3fwNdAYhkUffMl5iAeblmoJtGPK4="
+            }
+          },
+          "ApiGatewayRestApi": {
+            "Type": "AWS::ApiGateway::RestApi",
+            "Properties": {
+              "Name": "dev-image-processing-api",
+              "EndpointConfiguration": {
+                "Types": [
+                  "EDGE"
+                ]
+              },
+              "Policy": ""
+            }
+          },
+          "ApiGatewayResourceUpload": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+              "ParentId": {
+                "Fn::GetAtt": [
+                  "ApiGatewayRestApi",
+                  "RootResourceId"
+                ]
+              },
+              "PathPart": "upload",
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              }
+            }
+          },
+          "ApiGatewayResourceProcess": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+              "ParentId": {
+                "Fn::GetAtt": [
+                  "ApiGatewayRestApi",
+                  "RootResourceId"
+                ]
+              },
+              "PathPart": "process",
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              }
+            }
+          },
+          "ApiGatewayMethodUploadPost": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "HttpMethod": "POST",
+              "RequestParameters": {},
+              "ResourceId": {
+                "Ref": "ApiGatewayResourceUpload"
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "ApiKeyRequired": "<REDACTED>",
+              "AuthorizationType": "NONE",
+              "Integration": {
+                "IntegrationHttpMethod": "POST",
+                "Type": "AWS_PROXY",
+                "Uri": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":apigateway:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":lambda:path/2015-03-31/functions/",
+                      {
+                        "Fn::GetAtt": [
+                          "UploadImageLambdaFunction",
+                          "Arn"
+                        ]
+                      },
+                      "/invocations"
+                    ]
+                  ]
+                }
+              },
+              "MethodResponses": []
+            },
+            "DependsOn": [
+              "UploadImageLambdaPermissionApiGateway"
+            ]
+          },
+          "ApiGatewayMethodProcessPost": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "HttpMethod": "POST",
+              "RequestParameters": {},
+              "ResourceId": {
+                "Ref": "ApiGatewayResourceProcess"
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "ApiKeyRequired": "<REDACTED>",
+              "AuthorizationType": "NONE",
+              "Integration": {
+                "IntegrationHttpMethod": "POST",
+                "Type": "AWS_PROXY",
+                "Uri": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":apigateway:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":lambda:path/2015-03-31/functions/",
+                      {
+                        "Fn::GetAtt": [
+                          "ProcessImageLambdaFunction",
+                          "Arn"
+                        ]
+                      },
+                      "/invocations"
+                    ]
+                  ]
+                }
+              },
+              "MethodResponses": []
+            },
+            "DependsOn": [
+              "ProcessImageLambdaPermissionApiGateway"
+            ]
+          },
+          "ApiGatewayDeployment1742272829711": {
+            "Type": "AWS::ApiGateway::Deployment",
+            "Properties": {
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "StageName": "dev"
+            },
+            "DependsOn": [
+              "ApiGatewayMethodUploadPost",
+              "ApiGatewayMethodProcessPost"
+            ]
+          },
+          "UploadImageLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "UploadImageLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "ApiGatewayRestApi"
+                    },
+                    "/*/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "ProcessImageLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "ProcessImageLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "ApiGatewayRestApi"
+                    },
+                    "/*/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "ApiGatewayLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/api-gateway/image-processing-api-dev"
+            }
+          },
+          "CustomApiGatewayAccountCloudWatchRole": {
+            "Type": "Custom::ApiGatewayAccountRole",
+            "Version": "1.0",
+            "Properties": {
+              "ServiceToken": "<REDACTED>"
+            }
+          },
+          "IamRoleCustomResourcesLambdaExecution": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": [
+                        "lambda.amazonaws.com"
+                      ]
+                    },
+                    "Action": [
+                      "sts:AssumeRole"
+                    ]
+                  }
+                ]
+              },
+              "Policies": [
+                {
+                  "PolicyName": {
+                    "Fn::Join": [
+                      "-",
+                      [
+                        "dev",
+                        "image-processing-api",
+                        "custom-resources-lambda"
+                      ]
+                    ]
+                  },
+                  "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:CreateLogStream",
+                          "logs:CreateLogGroup",
+                          "logs:TagResource"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/image-processing-api-dev*:*"
+                          }
+                        ]
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:PutLogEvents"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/image-processing-api-dev*:*:*"
+                          }
+                        ]
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Resource": {
+                          "Fn::Join": [
+                            ":",
+                            [
+                              "arn",
+                              {
+                                "Ref": "AWS::Partition"
+                              },
+                              "iam:",
+                              {
+                                "Ref": "AWS::AccountId"
+                              },
+                              "role/*"
+                            ]
+                          ]
+                        },
+                        "Action": [
+                          "iam:AttachRolePolicy",
+                          "iam:CreateRole",
+                          "iam:ListAttachedRolePolicies",
+                          "iam:PassRole"
+                        ]
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Resource": {
+                          "Fn::Join": [
+                            ":",
+                            [
+                              "arn",
+                              {
+                                "Ref": "AWS::Partition"
+                              },
+                              "apigateway:*::/account"
+                            ]
+                          ]
+                        },
+                        "Action": [
+                          "apigateway:GET",
+                          "apigateway:PATCH"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "CustomDashresourceDashapigwDashcwDashroleLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": "serverless-framework-deployments-us-east-1-9e83b20f-aa7d",
+                "S3Key": "serverless/image-processing-api/dev/1742272851452-2025-03-18T04:40:51.452Z/custom-resources.zip"
+              },
+              "FunctionName": "image-processing-api-dev-custom-resource-apigw-cw-role",
+              "Handler": "api-gateway-cloud-watch-role/handler.handler",
+              "MemorySize": 1024,
+              "Runtime": "nodejs20.x",
+              "Timeout": 180,
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleCustomResourcesLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "IamRoleCustomResourcesLambdaExecution",
+              "CustomDashresourceDashapigwDashcwDashroleLogGroup"
+            ]
+          },
+          "CustomDashresourceDashapigwDashcwDashroleLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/image-processing-api-dev-custom-resource-apigw-cw-role"
+            }
+          },
+          "UploadsBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketName": "my-new-image-uploads-moaz007",
+              "AccessControl": "Private"
+            }
+          },
+          "ProcessedBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketName": "my-new-image-processed-moaz007",
+              "AccessControl": "Private"
+            }
+          },
+          "LambdaExecutionTimeAlarm": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+              "AlarmName": "LambdaExecutionTimeAlarm",
+              "MetricName": "Duration",
+              "Namespace": "AWS/Lambda",
+              "Statistic": "Average",
+              "Period": 300,
+              "EvaluationPeriods": 1,
+              "Threshold": 3000,
+              "ComparisonOperator": "GreaterThanThreshold",
+              "AlarmActions": [],
+              "Dimensions": [
+                {
+                  "Name": "FunctionName",
+                  "Value": "image-processing-api-dev-uploadImage"
+                }
+              ]
+            }
+          },
+          "LambdaErrorRateAlarm": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+              "AlarmName": "LambdaErrorRateAlarm",
+              "MetricName": "Errors",
+              "Namespace": "AWS/Lambda",
+              "Statistic": "Sum",
+              "Period": 300,
+              "EvaluationPeriods": 1,
+              "Threshold": 1,
+              "ComparisonOperator": "GreaterThanThreshold",
+              "AlarmActions": [],
+              "Dimensions": [
+                {
+                  "Name": "FunctionName",
+                  "Value": "image-processing-api-dev-uploadImage"
+                }
+              ]
+            }
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": "serverless-framework-deployments-us-east-1-9e83b20f-aa7d",
+            "Export": {
+              "Name": "sls-image-processing-api-dev-ServerlessDeploymentBucketName"
+            }
+          },
+          "UploadImageLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "UploadImageLambdaVersionh7GYXi5sdUxGSESnVCWYR0BVtnfYPtGR4rMYYosgRQE"
+            },
+            "Export": {
+              "Name": "sls-image-processing-api-dev-UploadImageLambdaFunctionQualifiedArn"
+            }
+          },
+          "ProcessImageLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "ProcessImageLambdaVersionJQWVMAnl2HiphLJIFCeaCbhv4C74t5H8a2GIT55oJs"
+            },
+            "Export": {
+              "Name": "sls-image-processing-api-dev-ProcessImageLambdaFunctionQualifiedArn"
+            }
+          },
+          "ServiceEndpoint": {
+            "Description": "URL of the service endpoint",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  "https://",
+                  {
+                    "Ref": "ApiGatewayRestApi"
+                  },
+                  ".execute-api.",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ".",
+                  {
+                    "Ref": "AWS::URLSuffix"
+                  },
+                  "/dev"
+                ]
+              ]
+            },
+            "Export": {
+              "Name": "sls-image-processing-api-dev-ServiceEndpoint"
+            }
+          }
+        }
+      },
+      "vpc": {}
+    },
+    "dashboard": {
+      "isEnabledForService": false,
+      "requiredAuthentication": false,
+      "orgFeaturesInUse": null,
+      "orgObservabilityIntegrations": null,
+      "serviceAppId": null,
+      "serviceProvider": null,
+      "instanceParameters": null
+    },
+    "serviceRawFile": "org: moaz007\nservice: image-processing-api\nprovider:\n  name: aws\n  runtime: nodejs20.x\n  memorySize: 2048\n  stage: dev\n  logs:\n    restApi: true # Enable logging for REST API\n    httpApi: true # Enable logging for HTTP API\n  iamRoleStatements:\n    - Effect: Allow\n      Action:\n        - s3:GetObject\n        - s3:PutObject\n        - cloudwatch:PutMetricData # Required for custom CloudWatch metrics\n      Resource:\n        - arn:aws:s3:::my-new-image-uploads-moaz007/*\n        - arn:aws:s3:::my-new-image-processed-moaz007/*\n  region: us-east-1\n  versionFunctions: true\n\nfunctions:\n  uploadImage:\n    handler: handler.uploadImage\n    events:\n      - http:\n          path: upload\n          method: post\n    name: image-processing-api-dev-uploadImage\n\n  processImage:\n    handler: handler.processImage\n    events:\n      - http:\n          path: process\n          method: post\n    name: image-processing-api-dev-processImage\n\nresources:\n  Resources:\n    # S3 bucket for image uploads\n    UploadsBucket:\n      Type: AWS::S3::Bucket\n      Properties:\n        BucketName: my-new-image-uploads-moaz007\n        AccessControl: Private\n\n    # S3 bucket for processed images\n    ProcessedBucket:\n      Type: AWS::S3::Bucket\n      Properties:\n        BucketName: my-new-image-processed-moaz007\n        AccessControl: Private\n\n    # CloudWatch alarm for Lambda execution time\n    LambdaExecutionTimeAlarm:\n      Type: AWS::CloudWatch::Alarm\n      Properties:\n        AlarmName: LambdaExecutionTimeAlarm\n        MetricName: Duration\n        Namespace: AWS/Lambda\n        Statistic: Average\n        Period: 300\n        EvaluationPeriods: 1\n        Threshold: 3000 # Threshold in milliseconds (3 seconds)\n        ComparisonOperator: GreaterThanThreshold\n        AlarmActions: [] # Add SNS Topic ARN for notifications\n        Dimensions:\n          - Name: FunctionName\n            Value: image-processing-api-dev-uploadImage\n\n    # CloudWatch alarm for Lambda error rate\n    LambdaErrorRateAlarm:\n      Type: AWS::CloudWatch::Alarm\n      Properties:\n        AlarmName: LambdaErrorRateAlarm\n        MetricName: Errors\n        Namespace: AWS/Lambda\n        Statistic: Sum\n        Period: 300\n        EvaluationPeriods: 1\n        Threshold: 1 # Threshold for 1 error\n        ComparisonOperator: GreaterThanThreshold\n        AlarmActions: [] # Add SNS Topic ARN for notifications\n        Dimensions:\n          - Name: FunctionName\n            Value: image-processing-api-dev-uploadImage\n\n    # CloudWatch log group for Lambda function\n    UploadImageLogGroup:\n      Type: AWS::Logs::LogGroup\n      Properties:\n        LogGroupName: /aws/lambda/image-processing-api-dev-uploadImage\n        RetentionInDays: 14\n\n    ProcessImageLogGroup:\n      Type: AWS::Logs::LogGroup\n      Properties:\n        LogGroupName: /aws/lambda/image-processing-api-dev-processImage\n        RetentionInDays: 14\n\n",
+    "command": [
+      "deploy"
+    ],
+    "options": {},
+    "orgId": "29af5ad5-6a31-4cd2-b546-6a469f1aef45",
+    "orgName": "moaz007",
+    "userId": "rgXwfPmY9ZvXtF42zl",
+    "userName": "moaz007",
+    "serviceProviderAwsAccountId": "039612864808",
+    "serviceProviderAwsCfStackName": "image-processing-api-dev",
+    "serviceProviderAwsCfStackId": "arn:aws:cloudformation:us-east-1:039612864808:stack/image-processing-api-dev/6d0a25b0-02f5-11f0-b0e4-12a6ccb6e855",
+    "serviceProviderAwsCfStackCreated": "2025-03-17T06:02:36.910Z",
+    "serviceProviderAwsCfStackUpdated": "2025-03-18T04:35:05.146Z",
+    "serviceProviderAwsCfStackStatus": "UPDATE_COMPLETE",
+    "serviceProviderAwsCfStackOutputs": [
+      {
+        "OutputKey": "UploadImageLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:039612864808:function:image-processing-api-dev-uploadImage:47",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-image-processing-api-dev-UploadImageLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "ProcessImageLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:039612864808:function:image-processing-api-dev-processImage:44",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-image-processing-api-dev-ProcessImageLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "ServiceEndpoint",
+        "OutputValue": "https://hdpyo21c5a.execute-api.us-east-1.amazonaws.com/dev",
+        "Description": "URL of the service endpoint",
+        "ExportName": "sls-image-processing-api-dev-ServiceEndpoint"
+      },
+      {
+        "OutputKey": "ServerlessDeploymentBucketName",
+        "OutputValue": "serverless-framework-deployments-us-east-1-9e83b20f-aa7d",
+        "ExportName": "sls-image-processing-api-dev-ServerlessDeploymentBucketName"
+      }
+    ],
+    "compiledCloudFormationTemplate": {
+      "AWSTemplateFormatVersion": "2010-09-09",
+      "Description": "The AWS CloudFormation template for this Serverless application",
+      "Resources": {
+        "UploadImageLogGroup": {
+          "Type": "AWS::Logs::LogGroup",
+          "Properties": {
+            "LogGroupName": "/aws/lambda/image-processing-api-dev-uploadImage",
+            "RetentionInDays": 14
+          }
+        },
+        "ProcessImageLogGroup": {
+          "Type": "AWS::Logs::LogGroup",
+          "Properties": {
+            "LogGroupName": "/aws/lambda/image-processing-api-dev-processImage",
+            "RetentionInDays": 14
+          }
+        },
+        "IamRoleLambdaExecution": {
+          "Type": "AWS::IAM::Role",
+          "Properties": {
+            "AssumeRolePolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Service": [
+                      "lambda.amazonaws.com"
+                    ]
+                  },
+                  "Action": [
+                    "sts:AssumeRole"
+                  ]
+                }
+              ]
+            },
+            "Policies": [
+              {
+                "PolicyName": {
+                  "Fn::Join": [
+                    "-",
+                    [
+                      "image-processing-api",
+                      "dev",
+                      "lambda"
+                    ]
+                  ]
+                },
+                "PolicyDocument": {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "logs:CreateLogStream",
+                        "logs:CreateLogGroup",
+                        "logs:TagResource"
+                      ],
+                      "Resource": [
+                        {
+                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/image-processing-api-dev*:*"
+                        }
+                      ]
+                    },
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "logs:PutLogEvents"
+                      ],
+                      "Resource": [
+                        {
+                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/image-processing-api-dev*:*:*"
+                        }
+                      ]
+                    },
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "s3:GetObject",
+                        "s3:PutObject",
+                        "cloudwatch:PutMetricData"
+                      ],
+                      "Resource": [
+                        "arn:aws:s3:::my-new-image-uploads-moaz007/*",
+                        "arn:aws:s3:::my-new-image-processed-moaz007/*"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            "Path": "/",
+            "RoleName": {
+              "Fn::Join": [
+                "-",
+                [
+                  "image-processing-api",
+                  "dev",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  "lambdaRole"
+                ]
+              ]
+            }
+          }
+        },
+        "UploadImageLambdaFunction": {
+          "Type": "AWS::Lambda::Function",
+          "Properties": {
+            "Code": {
+              "S3Bucket": "serverless-framework-deployments-us-east-1-9e83b20f-aa7d",
+              "S3Key": "serverless/image-processing-api/dev/1742272851452-2025-03-18T04:40:51.452Z/image-processing-api.zip"
+            },
+            "Handler": "handler.uploadImage",
+            "Runtime": "nodejs20.x",
+            "FunctionName": "image-processing-api-dev-uploadImage",
+            "MemorySize": 2048,
+            "Timeout": 6,
+            "Role": {
+              "Fn::GetAtt": [
+                "IamRoleLambdaExecution",
+                "Arn"
+              ]
+            }
+          },
+          "DependsOn": [
+            "UploadImageLogGroup"
+          ]
+        },
+        "ProcessImageLambdaFunction": {
+          "Type": "AWS::Lambda::Function",
+          "Properties": {
+            "Code": {
+              "S3Bucket": "serverless-framework-deployments-us-east-1-9e83b20f-aa7d",
+              "S3Key": "serverless/image-processing-api/dev/1742272851452-2025-03-18T04:40:51.452Z/image-processing-api.zip"
+            },
+            "Handler": "handler.processImage",
+            "Runtime": "nodejs20.x",
+            "FunctionName": "image-processing-api-dev-processImage",
+            "MemorySize": 2048,
+            "Timeout": 6,
+            "Role": {
+              "Fn::GetAtt": [
+                "IamRoleLambdaExecution",
+                "Arn"
+              ]
+            }
+          },
+          "DependsOn": [
+            "ProcessImageLogGroup"
+          ]
+        },
+        "UploadImageLambdaVersionh7GYXi5sdUxGSESnVCWYR0BVtnfYPtGR4rMYYosgRQE": {
+          "Type": "AWS::Lambda::Version",
+          "DeletionPolicy": "Retain",
+          "Properties": {
+            "FunctionName": {
+              "Ref": "UploadImageLambdaFunction"
+            },
+            "CodeSha256": "ERfAM3XyKq3wsAE3fwNdAYhkUffMl5iAeblmoJtGPK4="
+          }
+        },
+        "ProcessImageLambdaVersionJQWVMAnl2HiphLJIFCeaCbhv4C74t5H8a2GIT55oJs": {
+          "Type": "AWS::Lambda::Version",
+          "DeletionPolicy": "Retain",
+          "Properties": {
+            "FunctionName": {
+              "Ref": "ProcessImageLambdaFunction"
+            },
+            "CodeSha256": "ERfAM3XyKq3wsAE3fwNdAYhkUffMl5iAeblmoJtGPK4="
+          }
+        },
+        "ApiGatewayRestApi": {
+          "Type": "AWS::ApiGateway::RestApi",
+          "Properties": {
+            "Name": "dev-image-processing-api",
+            "EndpointConfiguration": {
+              "Types": [
+                "EDGE"
+              ]
+            },
+            "Policy": ""
+          }
+        },
+        "ApiGatewayResourceUpload": {
+          "Type": "AWS::ApiGateway::Resource",
+          "Properties": {
+            "ParentId": {
+              "Fn::GetAtt": [
+                "ApiGatewayRestApi",
+                "RootResourceId"
+              ]
+            },
+            "PathPart": "upload",
+            "RestApiId": {
+              "Ref": "ApiGatewayRestApi"
+            }
+          }
+        },
+        "ApiGatewayResourceProcess": {
+          "Type": "AWS::ApiGateway::Resource",
+          "Properties": {
+            "ParentId": {
+              "Fn::GetAtt": [
+                "ApiGatewayRestApi",
+                "RootResourceId"
+              ]
+            },
+            "PathPart": "process",
+            "RestApiId": {
+              "Ref": "ApiGatewayRestApi"
+            }
+          }
+        },
+        "ApiGatewayMethodUploadPost": {
+          "Type": "AWS::ApiGateway::Method",
+          "Properties": {
+            "HttpMethod": "POST",
+            "RequestParameters": {},
+            "ResourceId": {
+              "Ref": "ApiGatewayResourceUpload"
+            },
+            "RestApiId": {
+              "Ref": "ApiGatewayRestApi"
+            },
+            "ApiKeyRequired": "<REDACTED>",
+            "AuthorizationType": "NONE",
+            "Integration": {
+              "IntegrationHttpMethod": "POST",
+              "Type": "AWS_PROXY",
+              "Uri": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":apigateway:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":lambda:path/2015-03-31/functions/",
+                    {
+                      "Fn::GetAtt": [
+                        "UploadImageLambdaFunction",
+                        "Arn"
+                      ]
+                    },
+                    "/invocations"
+                  ]
+                ]
+              }
+            },
+            "MethodResponses": []
+          },
+          "DependsOn": [
+            "UploadImageLambdaPermissionApiGateway"
+          ]
+        },
+        "ApiGatewayMethodProcessPost": {
+          "Type": "AWS::ApiGateway::Method",
+          "Properties": {
+            "HttpMethod": "POST",
+            "RequestParameters": {},
+            "ResourceId": {
+              "Ref": "ApiGatewayResourceProcess"
+            },
+            "RestApiId": {
+              "Ref": "ApiGatewayRestApi"
+            },
+            "ApiKeyRequired": "<REDACTED>",
+            "AuthorizationType": "NONE",
+            "Integration": {
+              "IntegrationHttpMethod": "POST",
+              "Type": "AWS_PROXY",
+              "Uri": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":apigateway:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":lambda:path/2015-03-31/functions/",
+                    {
+                      "Fn::GetAtt": [
+                        "ProcessImageLambdaFunction",
+                        "Arn"
+                      ]
+                    },
+                    "/invocations"
+                  ]
+                ]
+              }
+            },
+            "MethodResponses": []
+          },
+          "DependsOn": [
+            "ProcessImageLambdaPermissionApiGateway"
+          ]
+        },
+        "ApiGatewayDeployment1742272829711": {
+          "Type": "AWS::ApiGateway::Deployment",
+          "Properties": {
+            "RestApiId": {
+              "Ref": "ApiGatewayRestApi"
+            },
+            "StageName": "dev"
+          },
+          "DependsOn": [
+            "ApiGatewayMethodUploadPost",
+            "ApiGatewayMethodProcessPost"
+          ]
+        },
+        "UploadImageLambdaPermissionApiGateway": {
+          "Type": "AWS::Lambda::Permission",
+          "Properties": {
+            "FunctionName": {
+              "Fn::GetAtt": [
+                "UploadImageLambdaFunction",
+                "Arn"
+              ]
+            },
+            "Action": "lambda:InvokeFunction",
+            "Principal": "apigateway.amazonaws.com",
+            "SourceArn": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition"
+                  },
+                  ":execute-api:",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  ":",
+                  {
+                    "Ref": "ApiGatewayRestApi"
+                  },
+                  "/*/*"
+                ]
+              ]
+            }
+          }
+        },
+        "ProcessImageLambdaPermissionApiGateway": {
+          "Type": "AWS::Lambda::Permission",
+          "Properties": {
+            "FunctionName": {
+              "Fn::GetAtt": [
+                "ProcessImageLambdaFunction",
+                "Arn"
+              ]
+            },
+            "Action": "lambda:InvokeFunction",
+            "Principal": "apigateway.amazonaws.com",
+            "SourceArn": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition"
+                  },
+                  ":execute-api:",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  ":",
+                  {
+                    "Ref": "ApiGatewayRestApi"
+                  },
+                  "/*/*"
+                ]
+              ]
+            }
+          }
+        },
+        "ApiGatewayLogGroup": {
+          "Type": "AWS::Logs::LogGroup",
+          "Properties": {
+            "LogGroupName": "/aws/api-gateway/image-processing-api-dev"
+          }
+        },
+        "CustomApiGatewayAccountCloudWatchRole": {
+          "Type": "Custom::ApiGatewayAccountRole",
+          "Version": "1.0",
+          "Properties": {
+            "ServiceToken": "<REDACTED>"
+          }
+        },
+        "IamRoleCustomResourcesLambdaExecution": {
+          "Type": "AWS::IAM::Role",
+          "Properties": {
+            "AssumeRolePolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Service": [
+                      "lambda.amazonaws.com"
+                    ]
+                  },
+                  "Action": [
+                    "sts:AssumeRole"
+                  ]
+                }
+              ]
+            },
+            "Policies": [
+              {
+                "PolicyName": {
+                  "Fn::Join": [
+                    "-",
+                    [
+                      "dev",
+                      "image-processing-api",
+                      "custom-resources-lambda"
+                    ]
+                  ]
+                },
+                "PolicyDocument": {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "logs:CreateLogStream",
+                        "logs:CreateLogGroup",
+                        "logs:TagResource"
+                      ],
+                      "Resource": [
+                        {
+                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/image-processing-api-dev*:*"
+                        }
+                      ]
+                    },
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "logs:PutLogEvents"
+                      ],
+                      "Resource": [
+                        {
+                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/image-processing-api-dev*:*:*"
+                        }
+                      ]
+                    },
+                    {
+                      "Effect": "Allow",
+                      "Resource": {
+                        "Fn::Join": [
+                          ":",
+                          [
+                            "arn",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            "iam:",
+                            {
+                              "Ref": "AWS::AccountId"
+                            },
+                            "role/*"
+                          ]
+                        ]
+                      },
+                      "Action": [
+                        "iam:AttachRolePolicy",
+                        "iam:CreateRole",
+                        "iam:ListAttachedRolePolicies",
+                        "iam:PassRole"
+                      ]
+                    },
+                    {
+                      "Effect": "Allow",
+                      "Resource": {
+                        "Fn::Join": [
+                          ":",
+                          [
+                            "arn",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            "apigateway:*::/account"
+                          ]
+                        ]
+                      },
+                      "Action": [
+                        "apigateway:GET",
+                        "apigateway:PATCH"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "CustomDashresourceDashapigwDashcwDashroleLambdaFunction": {
+          "Type": "AWS::Lambda::Function",
+          "Properties": {
+            "Code": {
+              "S3Bucket": "serverless-framework-deployments-us-east-1-9e83b20f-aa7d",
+              "S3Key": "serverless/image-processing-api/dev/1742272851452-2025-03-18T04:40:51.452Z/custom-resources.zip"
+            },
+            "FunctionName": "image-processing-api-dev-custom-resource-apigw-cw-role",
+            "Handler": "api-gateway-cloud-watch-role/handler.handler",
+            "MemorySize": 1024,
+            "Runtime": "nodejs20.x",
+            "Timeout": 180,
+            "Role": {
+              "Fn::GetAtt": [
+                "IamRoleCustomResourcesLambdaExecution",
+                "Arn"
+              ]
+            }
+          },
+          "DependsOn": [
+            "IamRoleCustomResourcesLambdaExecution",
+            "CustomDashresourceDashapigwDashcwDashroleLogGroup"
+          ]
+        },
+        "CustomDashresourceDashapigwDashcwDashroleLogGroup": {
+          "Type": "AWS::Logs::LogGroup",
+          "Properties": {
+            "LogGroupName": "/aws/lambda/image-processing-api-dev-custom-resource-apigw-cw-role"
+          }
+        },
+        "UploadsBucket": {
+          "Type": "AWS::S3::Bucket",
+          "Properties": {
+            "BucketName": "my-new-image-uploads-moaz007",
+            "AccessControl": "Private"
+          }
+        },
+        "ProcessedBucket": {
+          "Type": "AWS::S3::Bucket",
+          "Properties": {
+            "BucketName": "my-new-image-processed-moaz007",
+            "AccessControl": "Private"
+          }
+        },
+        "LambdaExecutionTimeAlarm": {
+          "Type": "AWS::CloudWatch::Alarm",
+          "Properties": {
+            "AlarmName": "LambdaExecutionTimeAlarm",
+            "MetricName": "Duration",
+            "Namespace": "AWS/Lambda",
+            "Statistic": "Average",
+            "Period": 300,
+            "EvaluationPeriods": 1,
+            "Threshold": 3000,
+            "ComparisonOperator": "GreaterThanThreshold",
+            "AlarmActions": [],
+            "Dimensions": [
+              {
+                "Name": "FunctionName",
+                "Value": "image-processing-api-dev-uploadImage"
+              }
+            ]
+          }
+        },
+        "LambdaErrorRateAlarm": {
+          "Type": "AWS::CloudWatch::Alarm",
+          "Properties": {
+            "AlarmName": "LambdaErrorRateAlarm",
+            "MetricName": "Errors",
+            "Namespace": "AWS/Lambda",
+            "Statistic": "Sum",
+            "Period": 300,
+            "EvaluationPeriods": 1,
+            "Threshold": 1,
+            "ComparisonOperator": "GreaterThanThreshold",
+            "AlarmActions": [],
+            "Dimensions": [
+              {
+                "Name": "FunctionName",
+                "Value": "image-processing-api-dev-uploadImage"
+              }
+            ]
+          }
+        }
+      },
+      "Outputs": {
+        "ServerlessDeploymentBucketName": {
+          "Value": "serverless-framework-deployments-us-east-1-9e83b20f-aa7d",
+          "Export": {
+            "Name": "sls-image-processing-api-dev-ServerlessDeploymentBucketName"
+          }
+        },
+        "UploadImageLambdaFunctionQualifiedArn": {
+          "Description": "Current Lambda function version",
+          "Value": {
+            "Ref": "UploadImageLambdaVersionh7GYXi5sdUxGSESnVCWYR0BVtnfYPtGR4rMYYosgRQE"
+          },
+          "Export": {
+            "Name": "sls-image-processing-api-dev-UploadImageLambdaFunctionQualifiedArn"
+          }
+        },
+        "ProcessImageLambdaFunctionQualifiedArn": {
+          "Description": "Current Lambda function version",
+          "Value": {
+            "Ref": "ProcessImageLambdaVersionJQWVMAnl2HiphLJIFCeaCbhv4C74t5H8a2GIT55oJs"
+          },
+          "Export": {
+            "Name": "sls-image-processing-api-dev-ProcessImageLambdaFunctionQualifiedArn"
+          }
+        },
+        "ServiceEndpoint": {
+          "Description": "URL of the service endpoint",
+          "Value": {
+            "Fn::Join": [
+              "",
+              [
+                "https://",
+                {
+                  "Ref": "ApiGatewayRestApi"
+                },
+                ".execute-api.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".",
+                {
+                  "Ref": "AWS::URLSuffix"
+                },
+                "/dev"
+              ]
+            ]
+          },
+          "Export": {
+            "Name": "sls-image-processing-api-dev-ServiceEndpoint"
+          }
+        }
+      }
+    }
+  }
+}

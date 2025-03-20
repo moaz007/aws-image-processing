@@ -1,0 +1,103 @@
+# Serverless Framework configuration for AWS Lambda
+
+org: moaz007
+service: image-processing-api
+
+provider:
+  name: aws
+  runtime: nodejs20.x        # Node.js runtime version
+  memorySize: 2048           # Allocate 2048 MB to each function
+  stage: dev
+  region: us-east-1
+  logs:
+    restApi: true
+    httpApi: true
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+        - cloudwatch:PutMetricData
+      Resource:
+        - arn:aws:s3:::my-new-image-uploads-moaz007/*
+        - arn:aws:s3:::my-new-image-processed-moaz007/*
+  versionFunctions: true
+
+functions:
+  uploadImage:
+    handler: handler.uploadImage
+    events:
+      - http:
+          path: upload
+          method: post
+    name: image-processing-api-dev-uploadImage
+
+  processImage:
+    handler: handler.processImage
+    events:
+      - http:
+          path: process
+          method: post
+    name: image-processing-api-dev-processImage
+
+resources:
+  Resources:
+    # S3 buckets for storing images.
+    UploadsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: my-new-image-uploads-moaz007
+        AccessControl: Private
+
+    ProcessedBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: my-new-image-processed-moaz007
+        AccessControl: Private
+
+    # CloudWatch alarms for monitoring Lambda metrics.
+    LambdaExecutionTimeAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: LambdaExecutionTimeAlarm
+        MetricName: Duration
+        Namespace: AWS/Lambda
+        Statistic: Average
+        Period: 300
+        EvaluationPeriods: 1
+        Threshold: 3000
+        ComparisonOperator: GreaterThanThreshold
+        AlarmActions: []
+        Dimensions:
+          - Name: FunctionName
+            Value: image-processing-api-dev-uploadImage
+
+    LambdaErrorRateAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: LambdaErrorRateAlarm
+        MetricName: Errors
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: 300
+        EvaluationPeriods: 1
+        Threshold: 1
+        ComparisonOperator: GreaterThanThreshold
+        AlarmActions: []
+        Dimensions:
+          - Name: FunctionName
+            Value: image-processing-api-dev-uploadImage
+
+    # Log groups for the functions.
+    UploadImageLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/lambda/image-processing-api-dev-uploadImage
+        RetentionInDays: 14
+
+    ProcessImageLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/lambda/image-processing-api-dev-processImage
+        RetentionInDays: 14
+
